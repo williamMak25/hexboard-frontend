@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+
+@layer base {
+    button{
+        @apply cursor-pointer
+    }
+}
