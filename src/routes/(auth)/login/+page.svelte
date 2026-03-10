@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
-	import { login } from '$lib/query/auth';
+	import { login, userMe } from '$lib/query/auth';
+	import toast from 'svelte-5-french-toast';
 
 	let email = $state('');
 	let password = $state('');
@@ -16,38 +17,34 @@
 			let data = response.data;
 			localStorage.setItem('accessToken', data.access_token);
 			let token = browser ? localStorage.getItem('accessToken') : null;
-			// if (token) {
-			// 	let me = await getUser();
+			if (token) {
+				let me = await userMe();
 
-			// 	let user = {
-			// 		id: me.id,
-			// 		name: me.name,
-			// 		email: me.email,
-			// 		token: data.access_token,
-			// 		role: me.role,
-			// 		teamName: me.teamName,
-			// 		teamId: me.teamId,
-			// 		isSuperuser: me.isSuperuser
-			// 	};
+				let user = {
+					id: me.id,
+					name: me.name,
+					email: me.email,
+					token: data.access_token,
+					role: me.roles,
+					teamName: me.teams,
+					isSuperuser: me.isSuperuser
+				};
 
-			// 	userStore.updateInfo(user);
-
-			// 	localStorage.setItem('user', JSON.stringify(user));
-			// 	toast.success('Successfully Signed In');
+				localStorage.setItem('user', JSON.stringify(user));
+				toast.success('Successfully Signed In');
 
 			// 	if (user.isSuperuser) {
 			// 		goto('/admin');
 			// 	} else {
 			goto('/');
 			// 	}
-			// }
+			}
 		} catch (e: any) {
-			console.log(e);
-			// if (e.status === 403) {
-			// 	toast.error(e.response.data.title);
-			// } else {
-			// 	toast.error(e.message);
-			// }
+			if (e.status === 403) {
+				toast.error(e.response.data.title);
+			} else {
+				toast.error(e.message);
+			}
 		}
 	};
 </script>

@@ -1,158 +1,167 @@
 <script lang="ts">
-	import { dndzone } from 'svelte-dnd-action';
-	import { flip } from 'svelte/animate';
+	import { browser } from '$app/environment';
+	import Modal from '$lib/components/UI/Modal.svelte';
+	import { boardList, createBoard } from '$lib/query/board';
+	import type { UserProfile } from '$lib/types/user';
+	import { createMutation, createQuery } from '@tanstack/svelte-query';
+	import toast from 'svelte-5-french-toast';
 
-	const flipDurationMs = 200;
+	// let { boards = [] } = $props();
+	let user: UserProfile | null = $derived(
+		browser ? JSON.parse(localStorage.getItem('user') ?? '') : null
+	);
+	let openCreateBoardModal = $state(false);
 
-	let columns = [
-		{
-			id: '1',
-			title: 'To Do',
-			items: [
-				{ id: '10', text: 'Define API Schema', tag: 'Backend', color: 'bg-blue-100 text-blue-700' },
-				{
-					id: '11',
-					text: 'Setup Litestar Auth',
-					tag: 'Security',
-					color: 'bg-purple-100 text-purple-700'
-				}
-			]
+	let title = $state('');
+	let ownerId = $state('');
+	let bgColor = $state('');
+
+	let boardQuery = createQuery(() => ({
+		queryKey: ['boards'],
+		queryFn: boardList
+	}));
+	let boards = $derived(boardQuery.data ? boardQuery.data?.items : []);
+
+	let createBoardMutation = createMutation(() => ({
+		mutationFn: createBoard,
+		onSuccess: () => {
+			toast.success('Board created successfully');
 		},
-		{
-			id: '2',
-			title: 'In Progress',
-			items: [
-				{
-					id: '12',
-					text: 'Refactor Repository Logic',
-					tag: 'Refactor',
-					color: 'bg-orange-100 text-orange-700'
-				}
-			]
-		},
-		{ id: '3', title: 'Done', items: [] }
+		onError: () => {
+			toast.error('Failed to create board');
+		}
+	}));
+
+	const presets = [
+		{ name: 'Default', value: 'white' },
+		{ name: 'Silver Mist', value: '#CAD2C5	' },
+		{ name: 'Soft Sky', value: '#A8DADC' },
+		{ name: 'Muted Sand', value: '#F1E3D3' },
+		{ name: 'Pale Lavender', value: '#E2E2F0' }
 	];
 
-	function handleDndConsiderColumns(e: CustomEvent) {
-		columns = e.detail.items;
-	}
-	function handleDndFinalizeColumns(e: CustomEvent) {
-		columns = e.detail.items;
-	}
-
-	function handleDndConsiderCards(columnId: string, e: CustomEvent) {
-		const colIndex = columns.findIndex((c) => c.id === columnId);
-		columns[colIndex].items = e.detail.items;
-		columns = [...columns];
-	}
-	function handleDndFinalizeCards(columnId: string, e: CustomEvent) {
-		const colIndex = columns.findIndex((c) => c.id === columnId);
-		columns[colIndex].items = e.detail.items;
-		columns = [...columns];
-	}
+	let handleCreateBoard = async () => {
+		let data = {
+			title,
+			ownerId: user?.id || '',
+			bgColor
+		};
+		createBoardMutation.mutate(data);
+	};
 </script>
 
-<main class="h-screen w-full overflow-hidden bg-slate-50 font-sans text-slate-900">
-	<header class="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
-		<div class="flex items-center gap-4">
-			<h1 class="text-xl font-semibold tracking-tight">Development Board</h1>
-			<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500"
-				>v1.0.4</span
-			>
-		</div>
-		<button
-			class="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95"
-		>
-			Share Board
-		</button>
-	</header>
+<div class="mx-auto max-w-7xl p-8">
+	<section class="mb-10">
+		<h2 class="mb-6 text-2xl font-bold text-[#2F3E46]">Your Boards</h2>
 
-	<div class="h-[calc(100vh-73px)] overflow-x-auto p-8">
-		<section
-			class="flex h-full items-start gap-6"
-			use:dndzone={{ items: columns, flipDurationMs, type: 'column', dropTargetStyle: {} }}
-			on:consider={handleDndConsiderColumns}
-			on:finalize={handleDndFinalizeColumns}
-		>
-			{#each columns as column (column.id)}
-				<div
-					animate:flip={{ duration: flipDurationMs }}
-					class="flex max-h-[calc(100%-2rem)] w-[320px] flex-col rounded-xl border border-slate-200 bg-slate-100/50 p-2 shadow-sm transition-shadow hover:shadow-md"
+		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+			{#each boards as board, i (i)}
+				<a
+					href="/{board.id}"
+					style="background-color: {board.bgColor};"
+					class="group block h-32 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-[#CAD2C5] hover:shadow-md"
 				>
-					<div class="flex items-center justify-between p-3">
-						<h2 class="text-sm font-bold tracking-wider text-slate-600 uppercase">
-							{column.title}
-						</h2>
-						<span class="text-xs font-semibold text-slate-400">{column.items.length}</span>
+					<div class="flex items-start justify-between">
+						<span class="font-semibold text-[#2F3E46]">{board.title}</span>
+						{#if board.ownerId}
+							<icon class="text-yellow-400">★</icon>
+						{/if}
 					</div>
-
-					<div
-						class="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-1 py-2"
-						use:dndzone={{ items: column.items, flipDurationMs, dropTargetStyle: {} }}
-						on:consider={(e) => handleDndConsiderCards(column.id, e)}
-						on:finalize={(e) => handleDndFinalizeCards(column.id, e)}
-					>
-						{#each column.items as item (item.id)}
-							<div
-								animate:flip={{ duration: flipDurationMs }}
-								class="group relative flex cursor-grab flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-indigo-300 active:cursor-grabbing"
-							>
-								{#if item.tag}
-									<span
-										class="w-fit rounded px-2 py-0.5 text-[10px] font-bold uppercase {item.color}"
-									>
-										{item.tag}
-									</span>
-								{/if}
-								<p class="text-sm leading-relaxed font-medium text-slate-700">{item.text}</p>
-							</div>
-						{/each}
-					</div>
-
-					<button
-						class="mt-2 flex items-center gap-2 rounded-lg p-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-200/70 hover:text-slate-700"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-4 w-4"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 4v16m8-8H4"
-							/>
-						</svg>
-						Add Task
-					</button>
-				</div>
+					<p class="mt-2 text-xs text-gray-500">{'Personal'}</p>
+				</a>
 			{/each}
 
 			<button
-				class="flex min-w-[320px] items-center justify-center rounded-xl border-2 border-dashed border-slate-300 py-4 text-sm font-medium text-slate-400 transition-all hover:border-slate-400 hover:bg-slate-50 hover:text-slate-600"
+				onclick={() => (openCreateBoardModal = true)}
+				class="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-[#CAD2C5] hover:text-[#2F3E46]"
 			>
-				+ Create new list
+				<span class="text-3xl">+</span>
+				<span class="text-sm font-medium">Create new board</span>
 			</button>
-		</section>
+		</div>
+	</section>
+</div>
+
+<Modal bind:open={openCreateBoardModal}>
+	<div
+		class="flex min-w-lg flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm"
+		style="background-color: {bgColor};"
+	>
+		<div class="flex items-center justify-between">
+			<h2 class="text-lg font-medium text-neutral-600">Create New Board</h2>
+			<button>Close</button>
+		</div>
+		<form class="flex flex-col gap-4" onsubmit={handleCreateBoard}>
+			<input
+				type="text"
+				bind:value={title}
+				placeholder="Board Title"
+				class="w-full rounded-lg border-2 border-neutral-600 px-4 py-3 transition-colors focus:border-blue-500 focus:outline-none"
+				required
+			/>
+
+			<div class="space-y-3">
+				<span class="block text-sm font-medium text-gray-700">Select Board Theme</span>
+
+				<div class="flex gap-4">
+					{#each presets as color}
+						<button
+							type="button"
+							aria-label="Select {color.name}"
+							onclick={() => (bgColor = color.value)}
+							class="group relative h-12 w-12 rounded-lg border-2 transition-all hover:scale-105 active:scale-95 {bgColor ===
+							color.value
+								? 'border-neutral-400'
+								: 'border-neutral-200'}"
+							style:background-color={color.value}
+						>
+							{#if color.value === 'white'}
+								<div class="absolute inset-0 flex items-center justify-center bg-white">
+									<svg
+										class="h-full w-full text-gray-200"
+										viewBox="0 0 100 100"
+										preserveAspectRatio="none"
+									>
+										<line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" stroke-width="2" />
+									</svg>
+									<span class="absolute text-[10px] font-bold text-gray-400 uppercase">None</span>
+								</div>
+							{/if}
+							{#if bgColor === color.value}
+								<div class="absolute inset-0 flex items-center justify-center">
+									<svg
+										class="h-6 w-6 text-green-400 drop-shadow-md"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke="currentColor"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="3"
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+								</div>
+							{/if}
+						</button>
+					{/each}
+				</div>
+			</div>
+			<button
+				type="submit"
+				onclick={() => createBoardMutation.mutate({ title, ownerId, bgColor })}
+				class="mt-4 w-full rounded-lg bg-green-600 px-4 py-3 font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+			>
+				Create Board
+			</button>
+		</form>
 	</div>
-</main>
+</Modal>
 
 <style>
-	:global(.dndzone-ghost) {
-		opacity: 0.2;
-		transform: scale(0.98);
-		filter: grayscale(1);
-	}
-
-	/* Subtle scrollbar for cards */
-	.custom-scrollbar::-webkit-scrollbar {
-		width: 4px;
-	}
-	.custom-scrollbar::-webkit-scrollbar-thumb {
-		background: #e2e8f0;
-		border-radius: 10px;
+	/* Use your primary color for a subtle accent on hover */
+	a:hover {
+		background-color: #f8faf9; /* Very light tint of Silver Mist */
 	}
 </style>

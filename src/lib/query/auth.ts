@@ -1,5 +1,7 @@
 import { env } from "$env/dynamic/public";
+import type { UserProfile } from "$lib/types/user";
 import axios from "axios";
+import axiosInstance from "./axiosInstance";
 
 export const login = async (data: { username: string; password: string }) => {
 	const params = new URLSearchParams();
@@ -23,3 +25,7 @@ export const login = async (data: { username: string; password: string }) => {
 		}
 	});
 };
+
+export const userMe = async () => {
+	return (await axiosInstance.get(`${env.PUBLIC_API_URL}/me`)).data as UserProfile
+}

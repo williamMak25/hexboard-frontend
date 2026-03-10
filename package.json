@@ -39,6 +39,7 @@
 	"dependencies": {
 		"@tanstack/svelte-query": "^6.1.0",
 		"axios": "^1.13.6",
+		"svelte-5-french-toast": "^2.0.6",
 		"svelte-dnd-action": "^0.9.69"
 	}
 }

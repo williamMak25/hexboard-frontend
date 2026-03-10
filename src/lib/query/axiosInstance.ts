@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { env } from '$env/dynamic/public';
 import { browser } from '$app/environment';
+import { logout } from '$lib/helper';
 // import { logout, refreshAccessToken } from '$lib/utils';
 
 // --- Create axios instance ---
@@ -40,14 +41,7 @@ axiosInstance.interceptors.response.use(
 
 		if (error.response.status === 401 && !originalRequest._retry) {
 			originalRequest._retry = true;
-
-			// const newAccessToken = await refreshAccessToken();
-			// if (newAccessToken) {
-			// 	originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-			// 	return axiosInstance(originalRequest);
-			// } else {
-			// 	logout();
-			// }
+			// logout();
 		}
 
 		return Promise.reject(error);

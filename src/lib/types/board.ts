@@ -3,7 +3,10 @@ export type UUID = string;
 export interface Board {
 	id: UUID;
 	title: string;
-	created_at: string;
+	ownerId: string;
+	bgColor: string;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface Column {
@@ -23,6 +26,8 @@ export interface PaginationResponse<T> {
 // DTOs (Data Transfer Objects)
 export interface CreateBoard {
 	title: string;
+	ownerId: UUID;
+	bgColor: string;
 }
 
 export interface CreateColumn {
