@@ -32,16 +32,17 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
 	(response) => response,
 	async (error) => {
-		const originalRequest = error.config;
+		// const originalRequest = error.config;
 
 		if (!error.response) {
 			console.error('Network error or server unreachable:', error.message);
 			return Promise.reject(error);
 		}
 
-		if (error.response.status === 401 && !originalRequest._retry) {
-			originalRequest._retry = true;
-			// logout();
+		// && !originalRequest._retry
+		if (error.response.status === 401) {
+			// originalRequest._retry = true;
+			logout();
 		}
 
 		return Promise.reject(error);

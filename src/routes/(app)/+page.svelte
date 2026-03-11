@@ -50,45 +50,40 @@
 	};
 </script>
 
-<div class="mx-auto max-w-7xl p-8">
-	<section class="mb-10">
-		<h2 class="mb-6 text-2xl font-bold text-[#2F3E46]">Your Boards</h2>
-
-		<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-			{#each boards as board, i (i)}
-				<a
-					href="/{board.id}"
-					style="background-color: {board.bgColor};"
-					class="group block h-32 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-[#CAD2C5] hover:shadow-md"
-				>
-					<div class="flex items-start justify-between">
-						<span class="font-semibold text-[#2F3E46]">{board.title}</span>
-						{#if board.ownerId}
-							<icon class="text-yellow-400">★</icon>
-						{/if}
-					</div>
-					<p class="mt-2 text-xs text-gray-500">{'Personal'}</p>
-				</a>
-			{/each}
-
-			<button
-				onclick={() => (openCreateBoardModal = true)}
-				class="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-[#CAD2C5] hover:text-[#2F3E46]"
+<!-- <div class="mx-auto max-w-7xl p-8"> -->
+<section class=" max-w-7xl p-6">
+	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+		{#each boards as board, i (i)}
+			<a
+				href="/{board.id}"
+				style="border-color: {board.bgColor};"
+				class="group block h-32 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-[#CAD2C5] hover:shadow-md"
 			>
-				<span class="text-3xl">+</span>
-				<span class="text-sm font-medium">Create new board</span>
-			</button>
-		</div>
-	</section>
-</div>
+				<div class="flex items-start justify-between">
+					<span class="font-semibold text-neutral-600">{board.title}</span>
+					{#if board.ownerId}
+						<icon class="text-yellow-400">★</icon>
+					{/if}
+				</div>
+				<p class="mt-2 text-xs text-gray-500">{'Personal'}</p>
+			</a>
+		{/each}
+
+		<button
+			onclick={() => (openCreateBoardModal = true)}
+			class="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-gray-500 transition-colors hover:border-[#CAD2C5] hover:text-[#2F3E46]"
+		>
+			<span class="text-3xl">+</span>
+			<span class="text-sm font-medium">Create new board</span>
+		</button>
+	</div>
+</section>
+<!-- </div> -->
 
 <Modal bind:open={openCreateBoardModal}>
-	<div
-		class="flex min-w-lg flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm"
-		style="background-color: {bgColor};"
-	>
+	<div class="flex min-w-lg flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
 		<div class="flex items-center justify-between">
-			<h2 class="text-lg font-medium text-neutral-600">Create New Board</h2>
+			<h2 class="text-lg font-medium">Create New Board</h2>
 			<button>Close</button>
 		</div>
 		<form class="flex flex-col gap-4" onsubmit={handleCreateBoard}>
@@ -96,7 +91,7 @@
 				type="text"
 				bind:value={title}
 				placeholder="Board Title"
-				class="w-full rounded-lg border-2 border-neutral-600 px-4 py-3 transition-colors focus:border-blue-500 focus:outline-none"
+				class="w-full rounded-lg border-2 border-neutral-200 px-4 py-3 transition-colors focus:border-blue-500 focus:outline-none"
 				required
 			/>
 

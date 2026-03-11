@@ -5,7 +5,6 @@ export function capitalizeFirstWord(str: string) {
 	return words.join(' ');
 }
 
-
 export const dateFormat = (date: string) => {
 	return `${new Date(date).getDate()}-${new Date(date).getMonth() + 1}-${new Date(date).getFullYear()}`;
 };
@@ -26,7 +25,8 @@ export const timeAgo = (createdAt: string) => {
 };
 
 export const logout = () => {
-	localStorage.removeItem('token');
+	localStorage.clear();
+
 	location.replace('/');
 };
 

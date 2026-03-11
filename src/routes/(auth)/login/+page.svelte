@@ -66,7 +66,7 @@
 					type="email"
 					bind:value={email}
 					placeholder="Enter email"
-					class="w-full rounded-sm border-2 border-slate-200 p-2 transition-colors focus:border-blue-500 focus:outline-none"
+					class="w-full rounded-lg border-2 border-slate-200 p-2 transition-colors focus:border-blue-500 focus:outline-none"
 					required
 				/>
 			</div>
@@ -76,7 +76,7 @@
 					type="password"
 					bind:value={password}
 					placeholder="Enter password"
-					class="w-full rounded-sm border-2 border-slate-200 p-2 transition-colors focus:border-blue-500 focus:outline-none"
+					class="w-full rounded-lg border-2 border-slate-200 p-2 transition-colors focus:border-blue-500 focus:outline-none"
 					required
 				/>
 			</div>
@@ -84,7 +84,7 @@
 			<button
 				type="submit"
 				disabled={loading}
-				class="w-full rounded-sm bg-green-600 py-2 font-bold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+				class="w-full rounded-sm bg-indigo-600 py-2 font-bold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
 			>
 				{loading ? 'Logging in...' : 'Log In'}
 			</button>

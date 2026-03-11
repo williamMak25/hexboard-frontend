@@ -1,7 +1,14 @@
-import type { Board, Card, Column, CreateBoard, PaginationResponse } from '$lib/types/board';
+import type {
+	Board,
+	Card,
+	Column,
+	CreateBoard,
+	CreateCard,
+	CreateColumn,
+	PaginationResponse
+} from '$lib/types/board';
 import type { QueryFunctionContext } from '@tanstack/svelte-query';
 import axiosInstance from './axiosInstance';
-
 
 // Board APIs
 export const createBoard = async (data: CreateBoard) => {
@@ -28,11 +35,15 @@ export const moveColumn = async (data: {
 		.data as null;
 };
 
+export const createColumn = async (data: CreateColumn) => {
+	return (await axiosInstance.post(`/columns/create`, data)).data as Column;
+};
+
 // Column Card APIs
 
 export const getColumnCards = async (args: QueryFunctionContext) => {
 	return (await axiosInstance.get(`/cards/column-cards/${args.queryKey[1]}`)).data as Card[];
-}
+};
 
 export const moveCard = async (data: {
 	cardId: string;
@@ -42,4 +53,12 @@ export const moveCard = async (data: {
 	};
 }) => {
 	return (await axiosInstance.patch(`/cards/card-position/${data.cardId}`, data.data)).data as null;
+};
+
+export const createCard = async (data: CreateCard) => {
+	return (await axiosInstance.post(`/cards/create`, data)).data as Card;
+};
+
+export const viewCard = async (args: QueryFunctionContext) => {
+	return (await axiosInstance.get(`/cards/detail/${args.queryKey[1]}`)).data as Card;
 };

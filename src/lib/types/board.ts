@@ -34,7 +34,7 @@ export interface CreateBoard {
 }
 
 export interface CreateColumn {
-	board_id: UUID;
+	boardId: UUID;
 	title: string;
 }
 
