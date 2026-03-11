@@ -11,9 +11,12 @@ export interface Board {
 
 export interface Column {
 	id: UUID;
-	board_id: UUID;
+	boardId: UUID;
 	title: string;
-	col_position: number;
+	colPosition: number;
+	cards: Card[];
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface PaginationResponse<T> {
@@ -36,6 +39,29 @@ export interface CreateColumn {
 }
 
 export interface UpdateColumnPosition {
-	board_id: UUID;
-	col_position: number;
+	boardId: UUID;
+	colPosition: number;
+}
+
+export interface Card {
+	colId: UUID;
+	title: string;
+	description: string;
+	position: number;
+	dueDate: string;
+	id: UUID;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CreateCard {
+	colId: UUID;
+	title: string;
+	description: string;
+	dueDate: string;
+}
+
+export interface UpdateCardPosition {
+	colId: UUID;
+	position: number;
 }

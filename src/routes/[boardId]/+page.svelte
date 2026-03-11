@@ -1,15 +1,25 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { getBoardColums, moveColumn } from '$lib/query/board';
+	import { getBoardColums, moveCard, moveColumn } from '$lib/query/board';
+	import type { Card, Column } from '$lib/types/board';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 
 	const flipDurationMs = 200;
 
-	let columsQuery = createQuery(() => ({
-		queryKey: ['columns', page.params.boardId],
-		queryFn: getBoardColums
+	let columsQuery = $derived(
+		createQuery(() => ({
+			queryKey: ['columns', page.params.boardId],
+			queryFn: getBoardColums
+		}))
+	);
+
+	let moveCardMutation = createMutation(() => ({
+		mutationFn: moveCard,
+		onSuccess: () => {
+			columsQuery.refetch();
+		}
 	}));
 
 	let moveColumnMutation = createMutation(() => ({
@@ -21,79 +31,55 @@
 			console.error('Error moving column:', error);
 		}
 	}));
-	let columns = $derived(columsQuery.data ? columsQuery.data : []);
-	// let columns = [
-	// 	{
-	// 		id: '1',
-	// 		title: 'To Do',
-	// 		items: [
-	// 			{ id: '10', text: 'Define API Schema', tag: 'Backend', color: 'bg-blue-100 text-blue-700' },
-	// 			{
-	// 				id: '11',
-	// 				text: 'Setup Litestar Auth',
-	// 				tag: 'Security',
-	// 				color: 'bg-purple-100 text-purple-700'
-	// 			}
-	// 		]
-	// 	},
-	// 	{
-	// 		id: '2',
-	// 		title: 'In Progress',
-	// 		items: [
-	// 			{
-	// 				id: '12',
-	// 				text: 'Refactor Repository Logic',
-	// 				tag: 'Refactor',
-	// 				color: 'bg-orange-100 text-orange-700'
-	// 			}
-	// 		]
-	// 	},
-	// 	{ id: '3', title: 'Done', items: [] }
-	// ];
+	// let columns = $derived(columsQuery.data ? columsQuery.data : []);
+	let columns: Column[] = $state([]);
 
+	// Sync the local state when the query data changes
+	$effect(() => {
+		if (columsQuery.data) {
+			columns = columsQuery.data;
+		}
+	});
 	function handleDndConsiderColumns(e: CustomEvent) {
 		columns = e.detail.items;
-		console.log(
-			'Consider column order:',
-			columns.map((c) => c)
-		);
-		// const colIndex = columns.findIndex((c) => c.id === columnId);
-		// columns[colIndex] = e.detail.items;
-		// if (page.params.boardId) {
-		// 	moveColumnMutation.mutate({
-		// 		columnId: columnId,
-		// 		data: {
-		// 			colPosition: colIndex,
-		// 			boardId: page.params.boardId
-		// 		}
-		// 	});
-		// }
 	}
+
 	function handleDndFinalizeColumns(e: CustomEvent) {
 		columns = e.detail.items;
 		const info = e.detail.info;
 		const targetIndex = columns.findIndex((c) => c.id === info.id);
 		const targetCol = columns[targetIndex];
-		// const colIndex = columns.findIndex((c) => c.id === columnId);
-		// columns[colIndex] = e.detail.items;
 		moveColumnMutation.mutate({
 			columnId: targetCol.id,
 			data: {
 				colPosition: targetIndex,
-				boardId: targetCol.board_id
+				boardId: targetCol.boardId
 			}
 		});
 	}
 
 	function handleDndConsiderCards(columnId: string, e: CustomEvent) {
-		// const colIndex = columns.findIndex((c) => c.id === columnId);
-		// columns[colIndex].items = e.detail.items;
-		// columns = [...columns];
+		const colIndex = columns.findIndex((c) => c.id === columnId);
+		columns[colIndex].cards = e.detail.items;
+		columns = [...columns];
 	}
 	function handleDndFinalizeCards(columnId: string, e: CustomEvent) {
-		// const colIndex = columns.findIndex((c) => c.id === columnId);
-		// columns[colIndex].items = e.detail.items;
-		// columns = [...columns];
+		const colIndex = columns.findIndex((c) => c.id === columnId);
+		columns[colIndex].cards = e.detail.items;
+		columns = [...columns];
+		const targetIndex = columns[colIndex].cards.findIndex((c) => c.id === e.detail.info.id);
+		// const targetCol = columns[targetIndex];
+		const newColId = columns.find((c) =>
+			c.cards.find((ite) => ite.id === e.detail.items[0]?.id)
+		)?.id;
+		if (!e.detail.items[0]?.id || targetIndex < 0) return;
+		moveCardMutation.mutate({
+			cardId: e.detail.items[0]?.id,
+			data: {
+				position: targetIndex,
+				colId: newColId || columnId
+			}
+		});
 	}
 </script>
 
@@ -128,28 +114,28 @@
 						<h2 class="text-sm font-bold tracking-wider text-slate-600 uppercase">
 							{column.title}
 						</h2>
-						<span class="text-xs font-semibold text-slate-400">{column.col_position + 1}</span>
+						<span class="text-xs font-semibold text-slate-400">{column.cards.length}</span>
 					</div>
 
 					<div
 						class="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-1 py-2"
-						// use:dndzone={{ items: column.items, flipDurationMs, dropTargetStyle: {} }}
+						use:dndzone={{ items: column.cards, flipDurationMs, dropTargetStyle: {} }}
+						onconsider={(e) => handleDndConsiderCards(column.id, e)}
+						onfinalize={(e) => handleDndFinalizeCards(column.id, e)}
 					>
-						<!-- {#each column.items as item (item.id)}
+						{#each column.cards as item (item.id)}
 							<div
 								animate:flip={{ duration: flipDurationMs }}
 								class="group relative flex cursor-grab flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-indigo-300 active:cursor-grabbing"
 							>
-								{#if item.tag}
-									<span
-										class="w-fit rounded px-2 py-0.5 text-[10px] font-bold uppercase {item.color}"
-									>
-										{item.tag}
+								{#if item.title}
+									<span class="w-fit rounded px-2 py-0.5 text-[10px] font-bold uppercase">
+										{item.title}
 									</span>
 								{/if}
-								<p class="text-sm leading-relaxed font-medium text-slate-700">{item.text}</p>
+								<p class="text-sm leading-relaxed font-medium text-slate-700">{item.description}</p>
 							</div>
-						{/each} -->
+						{/each}
 					</div>
 
 					<button
