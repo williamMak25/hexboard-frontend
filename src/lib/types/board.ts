@@ -1,5 +1,12 @@
+import type { UserProfile } from './user';
+
 export type UUID = string;
 
+export enum PriorityEnum {
+	LOW = 'low',
+	MEDIUM = 'medium',
+	HIGH = 'high'
+}
 export interface Board {
 	id: UUID;
 	title: string;
@@ -49,6 +56,13 @@ export interface Card {
 	description: string;
 	position: number;
 	dueDate: string;
+
+	attachements: string[];
+	priority: PriorityEnum;
+	reporter_id: UUID;
+	reporter: UserProfile;
+	assignees: UserProfile[];
+
 	id: UUID;
 	createdAt: string;
 	updatedAt: string;
@@ -59,6 +73,10 @@ export interface CreateCard {
 	title: string;
 	description: string;
 	dueDate: string;
+	priority: PriorityEnum;
+	reporterId: UUID;
+	assigneeIds: string[];
+	attachements: string[] | null;
 }
 
 export interface UpdateCardPosition {

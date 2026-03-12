@@ -1,15 +1,21 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { createCard } from '$lib/query/board';
 	import type { CreateCard } from '$lib/types/board';
+	import { PriorityEnum } from '$lib/types/board';
+	import type { UserProfile } from '$lib/types/user';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 
 	let { columnId, open = $bindable(false) }: { columnId: string; open: boolean } = $props();
 
 	const client = useQueryClient();
 
+	let user: UserProfile = $derived(browser ? JSON.parse(localStorage.getItem('user') ?? '') : null);
+
 	let title = $state('');
 	let description = $state('');
 	let dueDate = $state('');
+	let priority = $state(PriorityEnum.LOW);
 
 	let createCardMutation = createMutation(() => ({
 		mutationFn: createCard,
@@ -30,7 +36,11 @@
 			title,
 			description,
 			colId: columnId,
-			dueDate: dueDate + 'T00:00:00Z'
+			dueDate: dueDate + 'T00:00:00Z',
+			priority: priority,
+			assigneeIds: [],
+			attachements: null,
+			reporterId: user.id
 		};
 		createCardMutation.mutate(data);
 	}
@@ -48,6 +58,18 @@
 		/>
 	</div>
 	<div class="mb-4">
+		<label for="priority" class="mb-2 block text-sm font-medium text-gray-900">Priority</label>
+		<select
+			id="priority"
+			class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+			bind:value={priority}
+		>
+			{#each Object.entries(PriorityEnum) as [key, value], i (i)}
+				<option {value}>{key}</option>
+			{/each}
+		</select>
+	</div>
+	<div class="mb-4">
 		<label for="due-date" class="mb-2 block text-sm font-medium text-gray-900">Due Date</label>
 		<input
 			type="date"
@@ -57,6 +79,7 @@
 			bind:value={dueDate}
 		/>
 	</div>
+
 	<div class="mb-4">
 		<label for="description" class="mb-2 block text-sm font-medium text-gray-900">Description</label
 		>
@@ -65,7 +88,7 @@
 			class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
 			placeholder="Card description"
 			bind:value={description}
-		/>
+		></textarea>
 	</div>
 	<div class="flex items-center gap-4">
 		<button
