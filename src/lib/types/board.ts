@@ -83,3 +83,23 @@ export interface UpdateCardPosition {
 	colId: UUID;
 	position: number;
 }
+
+//  Files
+
+export interface FileType {
+	fileName: string;
+	filePath: string;
+	size: number;
+	fileType: string;
+
+	id: string;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CreateFile {
+	fileName: string;
+	filePath: string;
+	size: number;
+	fileType: string;
+}

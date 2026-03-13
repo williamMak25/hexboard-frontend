@@ -5,6 +5,7 @@
 	import { PriorityEnum } from '$lib/types/board';
 	import type { UserProfile } from '$lib/types/user';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import UploadFile from '../UI/UploadFile.svelte';
 
 	let { columnId, open = $bindable(false) }: { columnId: string; open: boolean } = $props();
 
@@ -79,7 +80,17 @@
 			bind:value={dueDate}
 		/>
 	</div>
-
+	<div class="mb-4">
+		<label for="due-date" class="mb-2 block text-sm font-medium text-gray-900">Due Date</label>
+		<input
+			type="date"
+			id="due-date"
+			class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+			placeholder="Card title"
+			bind:value={dueDate}
+		/>
+		<UploadFile />
+	</div>
 	<div class="mb-4">
 		<label for="description" class="mb-2 block text-sm font-medium text-gray-900">Description</label
 		>

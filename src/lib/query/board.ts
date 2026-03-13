@@ -62,3 +62,13 @@ export const createCard = async (data: CreateCard) => {
 export const viewCard = async (args: QueryFunctionContext) => {
 	return (await axiosInstance.get(`/cards/detail/${args.queryKey[1]}`)).data as Card;
 };
+
+// Upload
+
+export const uploadFile = async (data: FormData) => {
+	return await axiosInstance.post(`/file-upload`, data, {
+		headers: {
+			'Content-Type': 'multipart/form-data'
+		}
+	});
+};
