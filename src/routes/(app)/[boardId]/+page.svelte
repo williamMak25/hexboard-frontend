@@ -4,6 +4,7 @@
 	import CardForm from '$lib/components/forms/CardForm.svelte';
 	import ColumnForm from '$lib/components/forms/ColumnForm.svelte';
 	import Modal from '$lib/components/UI/Modal.svelte';
+	import RichTextEditor from '$lib/components/UI/RichTextEditor.svelte';
 	import { getBoardColums, moveCard, moveColumn } from '$lib/query/board';
 	import type { Card, Column } from '$lib/types/board';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
@@ -233,7 +234,7 @@
 </div>
 
 <Modal bind:open={openCreateCardModal}>
-	<div class="flex min-w-lg flex-col gap-4 rounded-2xl bg-white p-4">
+	<div class="flex min-w-lg flex-col gap-6 rounded-2xl bg-white p-6">
 		<div>
 			<h2 class="text-lg font-semibold">Create New Card</h2>
 			<p class="text-sm text-slate-500">Add a new card to the column</p>

@@ -5,6 +5,7 @@ import type {
 	CreateBoard,
 	CreateCard,
 	CreateColumn,
+	FileType,
 	PaginationResponse
 } from '$lib/types/board';
 import type { QueryFunctionContext } from '@tanstack/svelte-query';
@@ -66,9 +67,11 @@ export const viewCard = async (args: QueryFunctionContext) => {
 // Upload
 
 export const uploadFile = async (data: FormData) => {
-	return await axiosInstance.post(`/file-upload`, data, {
-		headers: {
-			'Content-Type': 'multipart/form-data'
-		}
-	});
+	return (
+		await axiosInstance.post(`/file-upload`, data, {
+			headers: {
+				'Content-Type': 'multipart/form-data'
+			}
+		})
+	).data as FileType[];
 };
