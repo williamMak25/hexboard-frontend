@@ -2,6 +2,8 @@
 	import { viewCard } from '$lib/query/board';
 	import { createQuery } from '@tanstack/svelte-query';
 	import Icon from '@iconify/svelte';
+	import Markdown from '@humanspeak/svelte-markdown';
+	import { resolve } from '$app/paths';
 
 	let { cardId, open = $bindable(false) }: { cardId: string; open: boolean } = $props();
 
@@ -11,6 +13,7 @@
 	}));
 
 	let card = $derived(cardDetailQuery.data ? cardDetailQuery.data : null);
+	$inspect(card?.attachements[0].split('.').slice(-1)[0]);
 </script>
 
 <div
@@ -23,8 +26,9 @@
 				<h2 class="max-w-[calc(100%-40px)] text-2xl font-bold text-cyan-700">
 					{card.title}
 				</h2>
-				<button class="text-neutral-700 hover:bg-neutral-100 p-2 rounded-full" onclick={() => (open = false)}
-					><Icon icon="entypo:cross" width="20" height="20" /></button
+				<button
+					class="rounded-full p-2 text-neutral-700 hover:bg-neutral-100"
+					onclick={() => (open = false)}><Icon icon="entypo:cross" width="20" height="20" /></button
 				>
 			</div>
 
@@ -35,23 +39,42 @@
 				</span>
 			</p>
 		</div>
+		<h3 class=" text-lg font-semibold text-gray-800">Description</h3>
 
 		<!-- Description -->
 		<div class="space-y-2">
-			<p class="text-sm font-semibold text-gray-700">Description</p>
-
 			<div
-				class="min-h-30 leading-6 rounded-xl border border-dashed border-neutral-200 bg-gray-50 p-3 text-sm text-gray-600"
+				class="min-h-30 rounded-xl border border-dashed border-neutral-200 bg-gray-50 p-3 text-sm leading-6 text-gray-600"
 			>
-				{card.description || 'No description added.'}
+				<Markdown source={card.description || 'No description added.'} />
 			</div>
 		</div>
 	{/if}
+	<h3 class=" text-lg font-semibold text-gray-800">Attachements</h3>
+	<div class="h-full   p-1">
+		<div
+			class="grid {card?.attachements && card?.attachements?.length > 1
+				? 'grid-cols-2'
+				: 'grid-cols-1'} h-full w-full"
+		>
+			{#each card?.attachements as att, i (i)}
+				<!-- split('.').slice(-1)[0] -->
+				{#if ['png', 'jpg', 'jpeg'].includes(att.split('.').slice(-1)[0] )}
+					<img src={att} alt={att.split('/')[-1]} class="h-auto w-full" />
+				{:else}
+					<div class="flex w-fit items-center space-x-3 overflow-hidden">
+						<span class="text-blue-500">📄</span>
+						<a href={att} target="_blank" class="truncate text-sm font-medium">{att.split('/').slice(-1)[0]}</a>
+					</div>
+					<!-- <iframe src={att} width="100%" height="600px" title={att.split('/')[-1]}></iframe> -->
+				{/if}
+			{/each}
+		</div>
+	</div>
+	<h3 class=" text-lg font-semibold text-gray-800">Comments</h3>
 
 	<!-- Comments Section -->
 	<div class="rounded-xl border border-neutral-200 bg-gray-50 p-5">
-		<h3 class="mb-5 text-lg font-semibold text-gray-800">Comments</h3>
-
 		<!-- Comment List -->
 		<div class="max-h-75 space-y-4 overflow-y-auto pr-1">
 			<!-- Comment -->

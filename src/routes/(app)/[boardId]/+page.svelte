@@ -4,7 +4,6 @@
 	import CardForm from '$lib/components/forms/CardForm.svelte';
 	import ColumnForm from '$lib/components/forms/ColumnForm.svelte';
 	import Modal from '$lib/components/UI/Modal.svelte';
-	import RichTextEditor from '$lib/components/UI/RichTextEditor.svelte';
 	import { getBoardColums, moveCard, moveColumn } from '$lib/query/board';
 	import type { Card, Column } from '$lib/types/board';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
@@ -46,7 +45,8 @@
 
 	$effect(() => {
 		if (columsQuery.data) {
-			columns = columsQuery.data;
+			columns = Array.isArray(columsQuery.data) ? columsQuery.data : [];
+			
 		}
 	});
 	function handleDndConsiderColumns(e: CustomEvent) {
@@ -77,9 +77,9 @@
 		const colIndex = columns.findIndex((c) => c.id === columnId);
 		columns[colIndex].cards = e.detail.items;
 		columns = [...columns];
-		const targetIndex = columns[colIndex].cards.findIndex((c) => c.id === e.detail.info.id);
+		const targetIndex = columns[colIndex].cards?.findIndex((c) => c.id === e.detail.info.id);
 		// const targetCol = columns[targetIndex];
-		const newColId = columns.find((c) =>
+		const newColId = columns?.find((c) =>
 			c.cards.find((ite) => ite.id === e.detail.items[0]?.id)
 		)?.id;
 		let isSameColumn = e.detail.items.every((ite: any) => ite.colId === columnId);
@@ -89,7 +89,7 @@
 		moveCardMutation.mutate({
 			cardId: isSameColumn
 				? e.detail.items[0]?.id
-				: e.detail.items.find((ite: any) => ite.colId !== newColId)?.id,
+				: e.detail?.items?.find((ite: any) => ite.colId !== newColId)?.id,
 			data: {
 				position: targetIndex,
 				colId: newColId || columnId
