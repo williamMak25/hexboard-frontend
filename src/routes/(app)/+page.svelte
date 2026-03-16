@@ -26,6 +26,7 @@
 		mutationFn: createBoard,
 		onSuccess: () => {
 			toast.success('Board created successfully');
+			boardQuery.refetch()
 		},
 		onError: () => {
 			toast.error('Failed to create board');
@@ -84,7 +85,7 @@
 	<div class="flex min-w-lg flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm">
 		<div class="flex items-center justify-between">
 			<h2 class="text-lg font-medium">Create New Board</h2>
-			<button>Close</button>
+			<button type="button" onclick={() => (openCreateBoardModal = false)}>Close</button>
 		</div>
 		<form class="flex flex-col gap-4" onsubmit={handleCreateBoard}>
 			<input

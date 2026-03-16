@@ -4,15 +4,37 @@
 	import type { CreateCard, FileType } from '$lib/types/board';
 	import { PriorityEnum } from '$lib/types/board';
 	import type { UserProfile } from '$lib/types/user';
-	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { createMutation, createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import UploadFile from '../UI/UploadFile.svelte';
 	import RichTextEditor from '../UI/RichTextEditor.svelte';
+	import { getUserList } from '$lib/query/auth';
+	import Icon from '@iconify/svelte';
 
 	let { columnId, open = $bindable(false) }: { columnId: string; open: boolean } = $props();
 
 	const client = useQueryClient();
 
 	let user: UserProfile = $derived(browser ? JSON.parse(localStorage.getItem('user') ?? '') : null);
+	let openAssignUser = $state(false);
+	let userListQuery = createQuery(() => ({
+		queryKey: ['user_list', 1],
+		queryFn: getUserList
+	}));
+
+	let assignedUserIdList: string[] = $state([]);
+
+	let assginUserOption = $derived(
+		userListQuery.data
+			? userListQuery.data.items.map((ite) => {
+					return {
+						name: ite.name,
+						id: ite.id,
+						avatar: ite.avatarUrl,
+						email: ite.email
+					};
+				})
+			: []
+	);
 
 	let title = $state('');
 	let description = $state('');
@@ -40,7 +62,7 @@
 			colId: columnId,
 			dueDate: dueDate + 'T00:00:00Z',
 			priority: priority,
-			assigneeIds: [],
+			assigneeIds: assignedUserIdList,
 			attachements: attachements.flatMap((ite) => {
 				return ite.filePath;
 			}),
@@ -76,7 +98,6 @@
 			</select>
 		</div>
 	</div>
-
 	<div class="">
 		<label for="due-date" class="mb-2 block font-medium text-gray-900">Due Date</label>
 		<input
@@ -87,7 +108,91 @@
 			bind:value={dueDate}
 		/>
 	</div>
-
+	<div class="relative">
+		<label for="assignee" class="mb-2 block font-medium text-gray-900">Assignees</label>
+		<button
+			type="button"
+			onclick={() => (openAssignUser = !openAssignUser)}
+			class="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-start text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+		>
+			<div class="flex items-center gap-2">
+				<Icon icon="formkit:add" width="16" height="16" class="text-blue-400" />
+				<span class="text-neutral-600">Add Assign User</span>
+			</div>
+			<Icon
+				icon={openAssignUser ? 'icon-park-outline:up' : 'icon-park-outline:down'}
+				width="16"
+				height="16"
+			/>
+		</button>
+		{#if openAssignUser}
+			<div
+				id="assignee"
+				class="absolute top-20 z-30 flex w-full flex-col gap-1 rounded-lg border border-gray-300 bg-gray-50 py-1 text-sm text-gray-900 shadow-md focus:border-blue-500 focus:ring-blue-500"
+			>
+				{#each assginUserOption as item, i (i)}
+					<button
+						onclick={() => {
+							if (assignedUserIdList.includes(item.id)) {
+								assignedUserIdList = assignedUserIdList.filter((id) => id !== item.id);
+							} else {
+								assignedUserIdList = [...assignedUserIdList, item.id];
+							}
+						}}
+						type="button"
+						class="flex items-center justify-between px-2 py-1 hover:bg-gray-200"
+					>
+						<div class="flex items-center gap-2">
+							{#if item.avatar}
+								<img
+									src="http://localhost:8000/uploaded-files/image_1BEA2959-98C8-402B-B2AA-F895ABE543A8_1770024267.png"
+									class="h-8 w-8 rounded-full border border-gray-100 bg-white"
+									alt={item.name}
+								/>
+							{:else}
+								<p
+									class="flex h-8 w-8 flex-col items-center justify-center rounded-full border border-gray-200 bg-white p-4 text-sm font-medium text-neutral-500"
+								>
+									{item.name.split(' ')[0].slice(0, 1)}
+								</p>
+							{/if}
+							<div class="flex flex-col items-start">
+								<p class="text-xs font-medium">{item.name}</p>
+								<span class="text-[10px] text-neutral-500">{item.email}</span>
+							</div>
+						</div>
+						<input type="checkbox" checked={assignedUserIdList.includes(item.id)} />
+					</button>
+				{/each}
+			</div>
+		{/if}
+		{#if assignedUserIdList}
+			<div class="flex items-center gap-2 py-2">
+				{#each assignedUserIdList as id, i (i)}
+					{@const user = assginUserOption.find((ite) => ite.id === id)}
+					<div class="flex items-center rounded-2xl border border-gray-200 bg-gray-100 p-1">
+						{#if user?.avatar}
+							<img
+								src="http://localhost:8000/uploaded-files/image_1BEA2959-98C8-402B-B2AA-F895ABE543A8_1770024267.png"
+								class="h-8 w-8 rounded-full border border-gray-100 bg-white"
+								alt={user?.name}
+							/>
+						{:else}
+							<p
+								class="flex h-6 w-6 flex-col items-center justify-center rounded-full border border-gray-400 bg-white p-4 text-sm font-medium text-neutral-500"
+							>
+								{user?.name.split(' ')[0].slice(0, 1)}
+							</p>
+						{/if}
+						<div class="flex flex-col items-start px-1">
+							<p class="text-[10px] font-medium">{user?.name}</p>
+							<span class="text-[10px] text-neutral-500">{user?.email}</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
 	<div class="">
 		<label for="description" class="mb-2 block font-medium text-gray-900">Description</label>
 		<RichTextEditor bind:markdownOutput={description} />

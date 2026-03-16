@@ -1,7 +1,9 @@
-import { env } from "$env/dynamic/public";
-import type { UserProfile } from "$lib/types/user";
-import axios from "axios";
-import axiosInstance from "./axiosInstance";
+import { env } from '$env/dynamic/public';
+import type { UserProfile } from '$lib/types/user';
+import axios from 'axios';
+import axiosInstance from './axiosInstance';
+import type { PaginationResponse } from '$lib/types/board';
+import type { QueryFunctionContext } from '@tanstack/svelte-query';
 
 export const login = async (data: { username: string; password: string }) => {
 	const params = new URLSearchParams();
@@ -27,5 +29,13 @@ export const login = async (data: { username: string; password: string }) => {
 };
 
 export const userMe = async () => {
-	return (await axiosInstance.get(`${env.PUBLIC_API_URL}/me`)).data as UserProfile
-}
+	return (await axiosInstance.get(`/me`)).data as UserProfile;
+};
+
+export const getUserList = async (args: QueryFunctionContext) => {
+	return (
+		await axiosInstance.get(
+			`/users?searchIgnoreCase=false&currentPage=${args.queryKey[1]}&pageSize=25&orderBy=created_at&sortOrder=desc`
+		)
+	).data as PaginationResponse<UserProfile>;
+};

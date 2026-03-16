@@ -3,7 +3,6 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import Icon from '@iconify/svelte';
 	import Markdown from '@humanspeak/svelte-markdown';
-	import { resolve } from '$app/paths';
 
 	let { cardId, open = $bindable(false) }: { cardId: string; open: boolean } = $props();
 
@@ -13,7 +12,6 @@
 	}));
 
 	let card = $derived(cardDetailQuery.data ? cardDetailQuery.data : null);
-	$inspect(card?.attachements[0].split('.').slice(-1)[0]);
 </script>
 
 <div
@@ -32,12 +30,43 @@
 				>
 			</div>
 
-			<p class="text-sm text-gray-500">
+			<p class="flex flex-col text-sm font-medium">
 				Due Date:
-				<span class="font-medium text-gray-700">
+				<span class="text-gray-500">
 					{new Date(card.dueDate).toLocaleDateString()}
 				</span>
 			</p>
+			<p class="text-sm font-medium">Assignees:</p>
+			{#if card.assignees.length}
+				<div class="flex flex-col items-start gap-2">
+					<div class="flex items-center gap-2">
+						{#each card.assignees as asign, i (i)}
+							<div class="flex items-center gap-2 rounded-lg bg-gray-100 p-1">
+								{#if asign.avatarUrl}
+									<img
+										src="http://localhost:8000/uploaded-files/image_1BEA2959-98C8-402B-B2AA-F895ABE543A8_1770024267.png"
+										class="h-8 w-8 rounded-full border border-gray-200 bg-white"
+										alt={asign.name}
+									/>
+								{:else}
+									<p
+										class="flex h-8 w-8 flex-col items-center justify-center rounded-full border border-gray-200 bg-white p-4 text-sm font-medium text-neutral-500"
+									>
+										{asign.avatarUrl || asign.name.split(' ')[0].slice(0, 1)}
+									</p>
+								{/if}
+
+								<div class="flex flex-col items-start pr-1">
+									<p class="text-xs font-medium">{asign.name}</p>
+									<span class="text-[10px] text-neutral-500">{asign.email}</span>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{:else}
+				<p class="text-sm font-medium text-gray-500">N/A</p>
+			{/if}
 		</div>
 		<h3 class=" text-lg font-semibold text-gray-800">Description</h3>
 
@@ -51,20 +80,25 @@
 		</div>
 	{/if}
 	<h3 class=" text-lg font-semibold text-gray-800">Attachements</h3>
-	<div class="h-full   p-1">
+	<div class="h-full p-1">
 		<div
-			class="grid {card?.attachements && card?.attachements?.length > 1
+			class="grid {card?.attachements && card?.attachements?.length > 1 
 				? 'grid-cols-2'
 				: 'grid-cols-1'} h-full w-full"
 		>
 			{#each card?.attachements as att, i (i)}
 				<!-- split('.').slice(-1)[0] -->
-				{#if ['png', 'jpg', 'jpeg'].includes(att.split('.').slice(-1)[0] )}
+				{#if ['png', 'jpg', 'jpeg'].includes(att.split('.').slice(-1)[0])}
 					<img src={att} alt={att.split('/')[-1]} class="h-auto w-full" />
 				{:else}
-					<div class="flex w-fit items-center space-x-3 overflow-hidden">
+					<div class="flex w-fit items-center space-x-3 overflow-hidden col-span-2">
 						<span class="text-blue-500">📄</span>
-						<a href={att} target="_blank" class="truncate text-sm font-medium">{att.split('/').slice(-1)[0]}</a>
+						<a
+							href={att}
+							target="_blank"
+							class="truncate text-sm font-medium hover:text-blue-400 hover:underline hover:underline-offset-2"
+							>{att.split('/').slice(-1)[0]}</a
+						>
 					</div>
 					<!-- <iframe src={att} width="100%" height="600px" title={att.split('/')[-1]}></iframe> -->
 				{/if}

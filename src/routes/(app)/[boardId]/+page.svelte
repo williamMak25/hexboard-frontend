@@ -5,10 +5,11 @@
 	import ColumnForm from '$lib/components/forms/ColumnForm.svelte';
 	import Modal from '$lib/components/UI/Modal.svelte';
 	import { getBoardColums, moveCard, moveColumn } from '$lib/query/board';
-	import type { Card, Column } from '$lib/types/board';
+	import { PriorityEnum, type Card, type Column } from '$lib/types/board';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
+	import Markdown from '@humanspeak/svelte-markdown';
 
 	const flipDurationMs = 200;
 
@@ -46,7 +47,6 @@
 	$effect(() => {
 		if (columsQuery.data) {
 			columns = Array.isArray(columsQuery.data) ? columsQuery.data : [];
-			
 		}
 	});
 	function handleDndConsiderColumns(e: CustomEvent) {
@@ -97,28 +97,28 @@
 		});
 	}
 
-	let keywordColors = $derived([
-		{
-			keywords: ['urgent', 'important', 'high priority', 'asap', 'bug'],
-			color: '#FCA5A5'
-		},
-		{
-			keywords: ['low priority', 'later', 'backlog'],
-			color: '#A5B4FC'
-		},
-		{
-			keywords: ['in progress', 'ongoing', 'working on it'],
-			color: '#FCD34D'
-		},
-		{
-			keywords: ['completed', 'done', 'finished'],
-			color: '#86EFAC'
-		},
-		{
-			keywords: ['blocked', 'stuck', 'needs help'],
-			color: '#F87171'
-		}
-	]);
+	// let keywordColors = $derived([
+	// 	{
+	// 		keywords: ['urgent', 'important', 'high priority', 'asap', 'bug'],
+	// 		color: '#FCA5A5'
+	// 	},
+	// 	{
+	// 		keywords: ['low priority', 'later', 'backlog'],
+	// 		color: '#A5B4FC'
+	// 	},
+	// 	{
+	// 		keywords: ['in progress', 'ongoing', 'working on it'],
+	// 		color: '#FCD34D'
+	// 	},
+	// 	{
+	// 		keywords: ['completed', 'done', 'finished'],
+	// 		color: '#86EFAC'
+	// 	},
+	// 	{
+	// 		keywords: ['blocked', 'stuck', 'needs help'],
+	// 		color: '#F87171'
+	// 	}
+	// ]);
 </script>
 
 <div class="h-[calc(100vh-73px)] p-8">
@@ -171,23 +171,78 @@
 									selectedCard = item;
 								}}
 								animate:flip={{ duration: flipDurationMs }}
-								class="group relative flex cursor-grab flex-col gap-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-indigo-300 active:cursor-grabbing"
+								class="group {item.priority === PriorityEnum.HIGH
+									? 'bg-red-100'
+									: item.priority === PriorityEnum.MEDIUM
+										? 'bg-orange-100'
+										: 'bg-neutral-100'} relative flex cursor-grab flex-col gap-3 rounded-lg border border-slate-200 p-2 shadow-sm transition-all hover:border-indigo-300 active:cursor-grabbing"
 							>
-								{#if item.title}
-									<span
-										style="color: {keywordColors.find(
-											(k) =>
-												k.keywords.includes(item.title.toLowerCase()) ||
-												k.keywords.includes(column.title.toLowerCase())
-										)?.color};"
-										class="line-clamp-2 w-fit rounded py-0.5 text-sm font-bold"
-									>
-										{item.title}
-									</span>
-								{/if}
-								<p class="line-clamp-3 text-xs leading-relaxed font-medium text-slate-500">
-									{item.description}
-								</p>
+								<div class="space-y-1.5 px-1 py-0.5">
+									{#if item.title}
+										<span class="line-clamp-2 w-fit rounded text-sm font-bold text-neutral-600">
+											{item.title}
+										</span>
+									{/if}
+									<div class="flex items-center gap-1 text-xs">
+										<span class="font-semibold text-neutral-600">Priority: </span>
+										<span
+											class="rounded-full border bg-white px-2 py-0.5 font-semibold {item.priority ===
+											PriorityEnum.HIGH
+												? 'border-red-500 text-red-500'
+												: item.priority === PriorityEnum.MEDIUM
+													? 'border-yellow-500 text-yellow-500'
+													: 'border-neutral-500 text-neutral-500'}"
+											>{item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}</span
+										>
+										{#if item.assignees.length}
+											<p>|</p>
+											<div class="flex items-center gap-1 text-xs">
+												{#each item.assignees as asign, i (i)}
+													{#if asign.avatarUrl}
+														<img
+															src="http://localhost:8000/uploaded-files/image_1BEA2959-98C8-402B-B2AA-F895ABE543A8_1770024267.png"
+															class="h-8 w-8 rounded-full border border-gray-200 bg-white"
+															alt={asign.name}
+														/>
+													{:else}
+														<p
+															class="flex h-6 w-6 flex-col items-center justify-center rounded-full border border-blue-500 bg-white p-1 text-xs font-medium text-blue-500"
+														>
+															{asign.name.split(' ')[0].slice(0, 1)}
+														</p>
+													{/if}
+												{/each}
+											</div>
+										{/if}
+									</div>
+								</div>
+								<div
+									class=" rounded-md bg-white p-2 text-xs leading-relaxed font-medium text-slate-500"
+								>
+									<div class="line-clamp-3">
+										<Markdown source={item.description} />
+									</div>
+								</div>
+								<div class="flex items-center gap-2">
+									{#if item.reporter.avatarUrl}
+										<img
+											src="http://localhost:8000/uploaded-files/image_1BEA2959-98C8-402B-B2AA-F895ABE543A8_1770024267.png"
+											class="h-8 w-8 rounded-full border border-gray-100 bg-white"
+											alt={item.reporter.name}
+										/>
+									{:else}
+										<p
+											class="flex h-8 w-8 flex-col items-center justify-center rounded-full border border-gray-100 bg-white p-4 text-sm font-medium text-neutral-500"
+										>
+											{item.reporter.avatarUrl || item.reporter.name.split(' ')[0].slice(0, 1)}
+										</p>
+									{/if}
+
+									<div class="flex flex-col items-start">
+										<p class="text-xs font-medium">{item.reporter.name}</p>
+										<span class="text-[10px] text-neutral-500">{item.reporter.email}</span>
+									</div>
+								</div>
 							</div>
 						{/each}
 					{/if}
