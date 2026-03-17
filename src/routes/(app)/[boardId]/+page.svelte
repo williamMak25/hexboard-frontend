@@ -314,7 +314,7 @@
 
 <Modal bind:open={openCardView}>
 	{#if selectedCard}
-		<CardView cardId={selectedCard?.id} bind:open={openCardView} />
+		<CardView cardId={selectedCard?.id} bind:open={openCardView}/>
 	{/if}
 </Modal>
 

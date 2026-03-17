@@ -1,17 +1,55 @@
 <script lang="ts">
 	import { viewCard } from '$lib/query/board';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createMutation, createQuery } from '@tanstack/svelte-query';
 	import Icon from '@iconify/svelte';
 	import Markdown from '@humanspeak/svelte-markdown';
+	import { createCardComment, getCommentByCardId } from '$lib/query/comment';
+	import toast from 'svelte-5-french-toast';
+	import { browser } from '$app/environment';
+	import type { UserProfile } from '$lib/types/user';
 
 	let { cardId, open = $bindable(false) }: { cardId: string; open: boolean } = $props();
+
+	let user: UserProfile | null = $derived(
+		browser ? JSON.parse(localStorage.getItem('user') ?? '') : null
+	);
 
 	let cardDetailQuery = createQuery(() => ({
 		queryKey: ['card-detail', cardId],
 		queryFn: viewCard
 	}));
 
+	let commentsByCardQuery = createQuery(() => ({
+		queryKey: ['comments-by-card', cardId],
+		queryFn: getCommentByCardId
+	}));
+	let comment = $state('');
+	let creatCommentMutation = createMutation(() => ({
+		mutationFn: createCardComment,
+		onSuccess: () => {
+			toast.success('Comment created successfully');
+			commentsByCardQuery.refetch();
+		},
+		onError: () => {
+			toast.error('Failed to create comment');
+		}
+	}));
+
 	let card = $derived(cardDetailQuery.data ? cardDetailQuery.data : null);
+
+	const handlePostComment = () => {
+		if (!user || !card) return;
+		let data = {
+			userId: user.id,
+			cardId: card.id,
+			message: comment
+		};
+		creatCommentMutation.mutate(data);
+	};
+
+	let comments = $derived(commentsByCardQuery.data ? commentsByCardQuery.data : []);
+
+	$inspect('comments', commentsByCardQuery.data);
 </script>
 
 <div
@@ -82,7 +120,7 @@
 	<h3 class=" text-lg font-semibold text-gray-800">Attachements</h3>
 	<div class="h-full p-1">
 		<div
-			class="grid {card?.attachements && card?.attachements?.length > 1 
+			class="grid {card?.attachements && card?.attachements?.length > 1
 				? 'grid-cols-2'
 				: 'grid-cols-1'} h-full w-full"
 		>
@@ -91,7 +129,7 @@
 				{#if ['png', 'jpg', 'jpeg'].includes(att.split('.').slice(-1)[0])}
 					<img src={att} alt={att.split('/')[-1]} class="h-auto w-full" />
 				{:else}
-					<div class="flex w-fit items-center space-x-3 overflow-hidden col-span-2">
+					<div class="col-span-2 flex w-fit items-center space-x-3 overflow-hidden">
 						<span class="text-blue-500">📄</span>
 						<a
 							href={att}
@@ -111,67 +149,49 @@
 	<div class="rounded-xl border border-neutral-200 bg-gray-50 p-5">
 		<!-- Comment List -->
 		<div class="max-h-75 space-y-4 overflow-y-auto pr-1">
-			<!-- Comment -->
-			<div class="flex gap-3">
-				<img
-					src="https://i.pravatar.cc/40"
-					class="h-9 w-9 rounded-full object-cover"
-					alt="avatar"
-				/>
+			{#each comments as comment, i (i)}
+				<div class="flex gap-3">
+					<img
+						src={comment.commentUser.avatarUrl ?? 'https://i.pravatar.cc/40'}
+						class="h-9 w-9 rounded-full object-cover"
+						alt="avatar"
+					/>
+					<div class="flex flex-1 flex-col gap-2">
+						<p class="text-sm font-semibold text-gray-800">{comment.commentUser.name}</p>
 
-				<div class="flex-1">
-					<div class="rounded-lg bg-white px-4 py-2 shadow-sm">
-						<div class="flex items-center justify-between">
-							<p class="text-sm font-semibold text-gray-800">William</p>
-							<span class="text-xs text-gray-400">2 min ago</span>
+						<div
+							class="rounded-lg {comment.commentUser.id === user?.id
+								? 'bg-blue-200'
+								: 'bg-white'} w-fit px-4 py-2 shadow-sm"
+						>
+							<p class=" text-sm text-gray-700">
+								{comment.message}
+							</p>
 						</div>
-
-						<p class="mt-1 text-sm text-gray-700">
-							We should move this task to the design column after review.
-						</p>
-					</div>
-
-					<div class="mt-1 ml-1 flex gap-4 text-xs text-gray-400">
-						<button class="hover:text-gray-600">Reply</button>
-						<button class="hover:text-gray-600">Edit</button>
+						<span class="text-xs text-gray-400">{comment.createdAt.split('T')[0]}</span>
 					</div>
 				</div>
-			</div>
-
-			<!-- Comment -->
-			<div class="flex gap-3">
-				<img
-					src="https://i.pravatar.cc/41"
-					class="h-9 w-9 rounded-full object-cover"
-					alt="avatar"
-				/>
-
-				<div class="flex-1">
-					<div class="rounded-lg bg-white px-4 py-2 shadow-sm">
-						<div class="flex items-center justify-between">
-							<p class="text-sm font-semibold text-gray-800">John</p>
-							<span class="text-xs text-gray-400">10 min ago</span>
-						</div>
-
-						<p class="mt-1 text-sm text-gray-700">I'll handle the API integration for this card.</p>
-					</div>
-				</div>
-			</div>
+			{/each}
 		</div>
 	</div>
-	<div class=" relative flex flex-1 items-center gap-3 border-t border-dashed border-neutral-200">
+	<form
+		onsubmit={handlePostComment}
+		class=" relative flex flex-1 items-center gap-3 border-t border-dashed border-neutral-200 pt-4"
+	>
 		<textarea
+			bind:value={comment}
 			placeholder="Write a comment..."
 			class="hide-scrollbar w-full resize-none appearance-none rounded-lg border border-gray-200 bg-white p-3 text-sm focus:ring-2 focus:ring-cyan-500/20 focus:outline-none"
 			rows="1"
 		></textarea>
 
 		<button
+			type="submit"
 			class="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-2 text-cyan-600 transition-colors hover:bg-cyan-100 focus:ring-2 focus:ring-cyan-500 focus:outline-none"
 		>
 			<Icon icon="tabler:send-filled" width="18" height="18" />
 		</button>
-	</div>
+	</form>
 </div>
 
 <style>
