@@ -38,6 +38,7 @@ export interface CreateBoard {
 	title: string;
 	ownerId: UUID;
 	bgColor: string;
+	memberIds:string[]
 }
 
 export interface CreateColumn {
