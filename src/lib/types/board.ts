@@ -11,6 +11,7 @@ export interface Board {
 	id: UUID;
 	title: string;
 	ownerId: string;
+	members:UserProfile[]
 	bgColor: string;
 	createdAt: string;
 	updatedAt: string;

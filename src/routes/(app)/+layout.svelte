@@ -13,9 +13,13 @@
 			>
 		</div>
 		<button
-			class="rounded-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95"
+			onclick={() => {
+				localStorage.clear();
+				window.location.replace('/login');
+			}}
+			class="rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-700 hover:shadow-lg active:scale-95"
 		>
-			Share Board
+			Logout
 		</button>
 	</header>
 	{@render children()}
