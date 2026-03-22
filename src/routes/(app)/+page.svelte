@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import BoardForm from '$lib/components/forms/BoardForm.svelte';
+	import DeleteWarnBox from '$lib/components/UI/DeleteWarnBox.svelte';
+	import DropMenu from '$lib/components/UI/DropMenu.svelte';
+	import MenuItem from '$lib/components/UI/MenuItem.svelte';
 	import Modal from '$lib/components/UI/Modal.svelte';
-	import { boardList } from '$lib/query/board';
+	import { boardList, deleteBoard } from '$lib/query/board';
 	import type { Board } from '$lib/types/board';
 	import type { UserProfile } from '$lib/types/user';
 	import Icon from '@iconify/svelte';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createMutation, createQuery } from '@tanstack/svelte-query';
+	import toast from 'svelte-5-french-toast';
 
 	let user: UserProfile | null = $derived(
 		browser ? JSON.parse(localStorage.getItem('user') ?? '') : null
@@ -19,6 +23,19 @@
 		queryKey: ['boards'],
 		queryFn: boardList
 	}));
+
+	let boardDelteMutation = createMutation(() => ({
+		mutationFn: deleteBoard,
+		onSuccess: () => {
+			boardQuery.refetch();
+			toast.success('Successfully deleted.');
+			selectedBoard = null;
+			openDeleteBox = false;
+		},
+		onError: () => {
+			toast.error('Fail to delete.');
+		}
+	}));
 	let boards = $derived(boardQuery.data ? boardQuery.data?.items : []);
 
 	export function getRandomColor(): string {
@@ -27,6 +44,10 @@
 		const lightness = 45 + Math.random() * 10; // 45–55%
 		return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 	}
+
+	let openActionMenu: HTMLButtonElement | null = $state(null);
+	let openMenu = $state(false);
+	let openDeleteBox = $state(false);
 </script>
 
 <!-- <div class="mx-auto max-w-7xl p-8"> -->
@@ -50,14 +71,33 @@
 						{/if}
 					</div>
 					<button
+						bind:this={openActionMenu}
 						class={board.ownerId === user?.id ? 'visible' : 'invisible'}
 						onclick={() => {
-							selectedBoard = board;
-							openEditBoardModal = true;
+							openMenu = false;
 						}}
 					>
-						<Icon icon="basil:edit-outline" width="24" height="24" />
+						<Icon icon="ph:dots-three-vertical-bold" width="24" height="24" />
+						<!-- <Icon icon="basil:edit-outline" width="24" height="24" /> -->
 					</button>
+					<DropMenu triggerElement={openActionMenu} bind:isOpen={openMenu}>
+						<MenuItem
+							onclick={() => {
+								selectedBoard = board;
+								openDeleteBox = true;
+							}}
+							><Icon icon="iconoir:bin-full" width="24" height="24" /><span>Delete</span></MenuItem
+						>
+						<MenuItem
+							onclick={() => {
+								selectedBoard = board;
+								openEditBoardModal = true;
+							}}
+						>
+							<Icon icon="basil:edit-outline" width="24" height="24" />
+							<span>Edit</span>
+						</MenuItem>
+					</DropMenu>
 				</div>
 				<a href="/{board.id}" class="flex flex-col gap-1">
 					<div class="flex flex-col items-start gap-1 text-sm">
@@ -113,4 +153,15 @@
 
 <Modal bind:open={openEditBoardModal}>
 	<BoardForm {user} bind:open={openEditBoardModal} board={selectedBoard} />
+</Modal>
+
+<Modal bind:open={openDeleteBox}>
+	<DeleteWarnBox
+		bind:open={openDeleteBox}
+		handleDelete={() => {
+			if (selectedBoard) {
+				boardDelteMutation.mutate(selectedBoard?.id);
+			}
+		}}
+	/>
 </Modal>

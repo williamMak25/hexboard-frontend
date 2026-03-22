@@ -85,10 +85,11 @@
 		let isSameColumn = e.detail.items.every((ite: any) => ite.colId === columnId);
 
 		if (!e.detail.items.length || targetIndex < 0) return;
-
+		console.log(isSameColumn);
+		console.log(e.detail.info?.id);
 		moveCardMutation.mutate({
 			cardId: isSameColumn
-				? e.detail.items[0]?.id
+				? e.detail.info?.id
 				: e.detail?.items?.find((ite: any) => ite.colId !== newColId)?.id,
 			data: {
 				position: targetIndex,
@@ -96,29 +97,6 @@
 			}
 		});
 	}
-
-	// let keywordColors = $derived([
-	// 	{
-	// 		keywords: ['urgent', 'important', 'high priority', 'asap', 'bug'],
-	// 		color: '#FCA5A5'
-	// 	},
-	// 	{
-	// 		keywords: ['low priority', 'later', 'backlog'],
-	// 		color: '#A5B4FC'
-	// 	},
-	// 	{
-	// 		keywords: ['in progress', 'ongoing', 'working on it'],
-	// 		color: '#FCD34D'
-	// 	},
-	// 	{
-	// 		keywords: ['completed', 'done', 'finished'],
-	// 		color: '#86EFAC'
-	// 	},
-	// 	{
-	// 		keywords: ['blocked', 'stuck', 'needs help'],
-	// 		color: '#F87171'
-	// 	}
-	// ]);
 </script>
 
 <div class="h-[calc(100vh-73px)] p-8">
@@ -179,7 +157,7 @@
 							>
 								<div class="space-y-1.5 px-1 py-0.5">
 									{#if item.title}
-										<span class="line-clamp-2 w-fit rounded text-sm font-bold text-neutral-600">
+										<span class="line-clamp-2 max-w-xs w-fit rounded text-sm font-bold text-neutral-600">
 											{item.title}
 										</span>
 									{/if}
@@ -314,7 +292,7 @@
 
 <Modal bind:open={openCardView}>
 	{#if selectedCard}
-		<CardView cardId={selectedCard?.id} bind:open={openCardView}/>
+		<CardView cardId={selectedCard?.id} bind:open={openCardView} />
 	{/if}
 </Modal>
 

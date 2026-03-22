@@ -20,6 +20,9 @@ export const updateBoard = async (data: { boarId: string; data: CreateBoard }) =
 	return await axiosInstance.patch(`/boards/${data.boarId}`, data.data);
 };
 
+export const deleteBoard = async (boardId: string) => {
+	return (await axiosInstance.delete(`/boards/${boardId}`)).data;
+};
 export const boardList = async () => {
 	return (await axiosInstance.get(`/boards`)).data as PaginationResponse<Board>;
 };
