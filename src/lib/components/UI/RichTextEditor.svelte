@@ -5,6 +5,7 @@
 
 	import TurndownService from 'turndown';
 	import { gfm } from 'turndown-plugin-gfm';
+	import { marked } from 'marked';
 
 	let { markdownOutput = $bindable('') }: { markdownOutput: string } = $props();
 
@@ -17,7 +18,7 @@
 
 	turndownService.use(gfm);
 
-	let content = $state('');
+	let content = $state(marked.parse(markdownOutput || ''));
 	let element: HTMLDivElement | null = $state(null);
 	let editorState: { editor: null | Editor } = $state({ editor: null });
 
@@ -31,8 +32,11 @@
 				content: content,
 				onUpdate: ({ editor }) => {
 					// This updates your Svelte state whenever the user types
-					content = editor.getHTML();
-					markdownOutput = turndownService.turndown(htmlInput);
+
+					const html = editor.getHTML();
+
+					content = html;
+					markdownOutput = turndownService.turndown(html);
 				},
 				onTransaction: () => {
 					editorState = { editor: editorState.editor };
@@ -116,7 +120,6 @@
 		overflow: hidden;
 		background: white;
 		max-width: 800px;
-		margin-top: 16px;
 	}
 
 	.toolbar {

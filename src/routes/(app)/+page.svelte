@@ -46,7 +46,8 @@
 	}
 
 	let openActionMenu: HTMLButtonElement | null = $state(null);
-	let openMenu = $state(false);
+	let actionMenus: HTMLButtonElement[] = [];
+	let openedBoard = '';
 	let openDeleteBox = $state(false);
 </script>
 
@@ -71,16 +72,16 @@
 						{/if}
 					</div>
 					<button
-						bind:this={openActionMenu}
+						bind:this={actionMenus[i]}
 						class={board.ownerId === user?.id ? 'visible' : 'invisible'}
 						onclick={() => {
-							openMenu = false;
+							openedBoard = board.id;
 						}}
 					>
 						<Icon icon="ph:dots-three-vertical-bold" width="24" height="24" />
 						<!-- <Icon icon="basil:edit-outline" width="24" height="24" /> -->
 					</button>
-					<DropMenu triggerElement={openActionMenu} bind:isOpen={openMenu}>
+					<DropMenu triggerElement={actionMenus[i]} isOpen={openedBoard === board.id}>
 						<MenuItem
 							onclick={() => {
 								selectedBoard = board;
